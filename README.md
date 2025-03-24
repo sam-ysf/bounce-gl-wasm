@@ -6,7 +6,7 @@ This is a Webassembly + WebGL port of <https://github.com/sam-ysf/Bounce-GL> wit
 
 Third-party
 --------------------------------------------------------------------------------
-The stb library was used for texture loading\
+The stb library is used for texture loading\
 <https://github.com/nothings/stb>
 
 
