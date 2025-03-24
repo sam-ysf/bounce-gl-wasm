@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Compiler path
+source "/path/to/your/emsdk_env.sh"
+
+# Output path
+DIR=/var/www/html
+OUTPUT=${DIR}/index.html
+
+mkdir -p ${DIR}/images
+
+# Copy images
+cp images/favicon.ico ${DIR}
+cp images/awesome-face.png ${DIR}/images
+cp images/brick-wall.png ${DIR}/images
+cp images/incredulous-face.png ${DIR}/images
+cp images/shocked-face.png ${DIR}/images
+
+em++                                         \
+    *.cpp                                    \
+    stb/*.cpp                                \
+    -std=c++20                               \
+    -sWASM=1                                 \
+    -sUSE_SDL=2                              \
+    -sUSE_WEBGL2=1                           \
+    -sFULL_ES3                               \
+    -sALLOW_MEMORY_GROWTH=1                  \
+    -I.                                      \
+    -sEXPORTED_RUNTIME_METHODS=ccall         \
+    --shell-file=html-template/template.html \
+    -o ${OUTPUT}
