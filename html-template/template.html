@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Noto Sans' rel='stylesheet'>
+    <title>bounceGL - WebAssembly Version</title>
+    <style>
+      .emscripten {
+          padding-right: 0;
+          margin-left: auto;
+          margin-right: auto;
+          display: block;
+      }
+
+      div.emscripten {
+          text-align: center;
+      }
+
+      div.emscripten_border {
+          border: 0px none;
+      }
+
+      canvas.emscripten {
+          border: 0px none;
+          background-color: black;
+      }
+
+      .panel-output {
+          width: 45px;
+      }
+
+      .spinner {
+          height: 50px;
+          width: 50px;
+          margin: 0px auto;
+          -webkit-animation: rotation .8s linear infinite;
+          -moz-animation: rotation .8s linear infinite;
+          -o-animation: rotation .8s linear infinite;
+          animation: rotation 0.8s linear infinite;
+          border-left: 10px solid rgb(0,150,240);
+          border-right: 10px solid rgb(0,150,240);
+          border-bottom: 10px solid rgb(0,150,240);
+          border-top: 10px solid rgb(100,0,200);
+          border-radius: 100%;
+          background-color: rgb(200,100,250);
+      }
+
+      @-webkit-keyframes rotation {
+          from {-webkit-transform: rotate(0deg);}
+          to {-webkit-transform: rotate(360deg);}
+      }
+
+      @-moz-keyframes rotation {
+          from {-moz-transform: rotate(0deg);}
+          to {-moz-transform: rotate(360deg);}
+      }
+
+      @-o-keyframes rotation {
+          from {-o-transform: rotate(0deg);}
+          to {-o-transform: rotate(360deg);}
+      }
+
+      @keyframes rotation {
+          from {transform: rotate(0deg);}
+          to {transform: rotate(360deg);}
+      }
+
+      .inline {
+          display: inline-block;
+      }
+
+      .vertical-offset-1px {
+          margin-top: 1px;
+      }
+
+      .vertical-offset-2px {
+          margin-top: 2px;
+      }
+
+      #maybe-unsupported-browser-banner {
+          font-family: 'Noto Sans';
+          padding: 5px;
+          text-align: center;
+          background: #cc6600;
+          border-bottom: 1px solid #000000;
+          font-weight: bold;
+          color: white;
+      }
+
+      #ctrl-panel {
+          padding: 5px;
+          vertical-align: top;
+          text-align: left;
+          background: #f0f0f0;
+          border: 1px solid #909090;
+          border-bottom: 2px solid #909090;
+          border-right: 2px solid #909090;
+          border-radius: 3px;
+      }
+
+      #body {
+          text-align: center;
+          overflow-x: auto;
+      }
+
+      #canvas-space {
+          width: 1000px;
+          margin-left: 3px;
+          border: 1px solid #000000;
+      }
+
+      #canvas-title-bar {
+          position: relative;
+          padding: 1px;
+          height: 40px;
+          border-bottom: 2px solid;
+          border-color: #000000;
+          background-color: #285577;
+      }
+
+      #ctrl-panel-title-bar {
+          position: relative;
+          padding: 1px;
+          height: 40px;
+          border-bottom: 2px solid;
+          border-color: #000000;
+          background-color: #285577;
+      }
+
+      .title-bar-cover {
+          padding: 1px;
+          height: 40px;
+          margin-top: -40px;
+          border-bottom: 1px solid;
+          border-color: #000000;
+          background-color: #285577;
+          opacity: 0.6;
+      }
+
+      .title-bar-cover-less {
+          padding: 1px;
+          height: 40px;
+          margin-top: -40px;
+          border-bottom: 1px solid;
+          border-color: #000000;
+          background-color: #285577;
+          opacity: 0.05;
+      }
+
+      #title-bar-text {
+          padding: 0px;
+          padding-top: 0px;
+          width: 100px;
+          height: 10px;
+          margin-top: -40px;
+          border-bottom: 0px none;
+          vertical-align: middle;
+          background-color: #285577;
+
+          color: #ffffff;
+          font-family: 'Noto Sans';
+          font-weight: bold;
+          font-size: 14px;
+      }
+
+      .title-group hr {
+          border-top: #202020;
+          border: 1px dashed;
+      }
+
+      hr.mini-seperator {
+          border: 1px dashed;
+      }
+
+      .skin-button {
+          width: 80px;
+          height: 80px;
+      }
+
+      .ctrl-output {
+          display: inline-block;
+          width: 30px;
+          border: 0px none;
+          border-right: 4px;
+          border-color: #a0a0a0;
+          border-style: dotted;
+
+          padding-right: 4px;
+          text-align: right;
+      }
+
+      .colorctrl-output {
+          display: inline-block;
+          width: 50px;
+          padding-left: 4px;
+          padding-right: 4px;
+          border: 0px none;
+          border-right: 4px;
+          border-color: #a0a0a0;
+          border-style: dotted;
+      }
+
+      .ctrl-group {
+          margin-top:5px;
+          padding: 5px;
+          border: 1px solid;
+          border-color: #707070;
+          border-radius: 3px;
+          background-color: #d0d0d0;
+
+          color: #505050;
+          font-family: 'Noto Sans';
+          font-size: 12px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="maybe-unsupported-browser-blurb"></div>
+    <div id="body">
+      <figure style="overflow:visible;" id="spinner">
+        <div class="spinner"></div>
+        <center style="margin-top:0.5em"><strong>BounceGL Demo...</strong></center>
+      </figure>
+      <div class="emscripten" id="status">Downloading...</div>
+      <div class="emscripten">
+        <progress value="0" max="100" id="progress" hidden=1></progress>
+      </div>
+      <div class="emscripten_border">
+        <div class="inline" id="ctrl-panel">
+          <!-- Panel title bar -->
+          <div id="ctrl-panel-title-bar">
+            <hr />
+            <hr />
+            <hr />
+            <div class="title-bar-cover"><div></div></div>
+            <center>
+              <div id="title-bar-text"><div><center>Control Panel</center></div></div>
+            </center>
+            <div class="title-bar-cover-less"><div></div></div>
+          </div>
+
+          <!-- Panel ctrl group -->
+          <div class="ctrl-group">
+            <div>
+              <div class="inline">
+                <button id="set-skin-1" name="set-skin-1" onClick='on_skin_click(1);'>
+                  <img src="images/awesome-face.png" class="skin-button" />
+                </button>
+              </div>
+              <div class="inline">
+                <button id="set-skin-2" name="set-skin-2" onClick='on_skin_click(2);'>
+                  <img src="images/shocked-face.png" class="skin-button" />
+                </button>
+              </div>
+              <div class="inline">
+                <button id="set-skin-3" name="set-skin-3" onClick='on_skin_click(3);'>
+                  <img src="images/incredulous-face.png" class="skin-button" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel ctrl group -->
+          <div class="ctrl-group">
+            <div>
+              <input type="range" min="0" max="20" value="0" class="slider" id="set-x-speed"
+                     onInput='on_range_change("set_x_speed", this);'>
+              <output><div id="ctrl-output-x-speed" class="ctrl-output">0</div></output>
+              <label for="set-x-speed">Box x-speed</label>
+            </div>
+            <div>
+              <input type="range" min="0" max="20" value="0" class="slider" id="set-y-speed"
+                     onInput='on_range_change("set_y_speed", this);'>
+              <output><div id="ctrl-output-y-speed" class="ctrl-output">0</div></output>
+              <label for="set-y-speed">Box y-speed</label>
+            </div>
+            <div>
+              <hr class='mini-separator'/>
+              <button id="reset-speed" name="set-skin-1" onClick='on_reset_speed();'>Reset</button>
+            </div>
+          </div>
+          <!-- Panel ctrl group -->
+          <div class="ctrl-group">
+            <div>
+              <input type="range" min="0" max="25" value="0" class="slider" id="set-x-turn-rate"
+                     onInput='on_range_change("set_x_turn_rate", this);'>
+              <output><div id="ctrl-output-x-turn-rate" class="ctrl-output">0</div></output>
+              <label for="set-x-turn-rate">Box x-axis turn rate</label>
+            </div>
+            <div>
+              <input type="range" min="0" max="25" value="0" class="slider" id="set-y-turn-rate"
+                     onInput='on_range_change("set_y_turn_rate", this);'>
+              <output><div id="ctrl-output-y-turn-rate" class="ctrl-output">0</div></output>
+              <label for="set-y-turn-rate">Box y-axis turn rate</label>
+            </div>
+            <div>
+              <input type="range" min="0" max="25" value="0" class="slider" id="set-z-turn-rate"
+                     onInput='on_range_change("set_z_turn_rate", this);'>
+              <output><div id="ctrl-output-z-turn-rate" class="ctrl-output">0</div></output>
+              <label for="set-z-turn-rate">Box z-axis turn rate</label>
+            </div>
+            <div>
+              <hr class='mini-separator'/>
+              <button id="reset-turn-rate" name="set-skin-1" onClick='on_reset_turn_rate();'>Reset</button>
+            </div>
+          </div>
+          <!-- Panel ctrl group -->
+          <div class="ctrl-group">
+            <div>
+              <input type="color" id="background-color" name="background-color" value="#a1951a"
+                     onInput='on_color_change("set_background_color", this);'>
+              <output><div class="colorctrl-output">#a1951a</div></output>
+              <label for="grid-color">Background Color</label>
+            </div>
+            <div class="vertical-offset-2px">
+              <input type="color" id="grid-color" name="grid-color" value="#c0c0c0"
+                     onInput='on_color_change("set_grid_color", this);'>
+              <output><div class="colorctrl-output">#c0c0c0</div></output>
+              <label for="grid-color">Grid Color</label>
+            </div>
+            <div>
+              <input type="checkbox" id="grid-enabled" name="grid-enabled" value="#ff0000" checked
+                     onChange='on_checkbox_change("set_grid_state", this);'>
+              <label for="grid-color">Enable Grid</label>
+            </div>
+          </div>
+          <!-- Panel ctrl group -->
+          <div class="ctrl-group">
+            <div>
+              <input type="range" min="0" max="45" value="0" class="slider" id="set-scene-pitch"
+                     onInput='on_range_change("set_scene_pitch", this);'>
+              <output><div id="ctrl-output-scene-pitch" class="ctrl-output">0</div></output>
+              <label for="set-scene-pitch">Scene Pitch</label>
+            </div>
+            <div>
+              <input type="range" min="-45" max="45" value="0" class="slider" id="set-scene-yaw"
+                     onInput='on_range_change("set_scene_yaw", this);'>
+              <output><div id="ctrl-output-scene-yaw" class="ctrl-output">0</div></output>
+              <label for="set-scene-yaw">Scene Yaw</label>
+            </div>
+            <div>
+              <input type="range" min="-180" max="180" value="0" class="slider" id="set-scene-roll"
+                     onInput='on_range_change("set_scene_roll", this);'>
+              <output><div id="ctrl-output-scene-roll" class="ctrl-output">0</div></output>
+              <label for="set-scene-roll">Scene Roll</label>
+            </div>
+            <div>
+              <hr class='mini-separator'/>
+              <button id="reset-scene-rotation" name="set-skin-1" onClick='on_reset_scene_rotation();'>Reset</button>
+            </div>
+          </div>
+          <!-- Panel ctrl group -->
+          <div class="ctrl-group">
+            <div>
+              <input type="range" min="-10" max="10" value="0" class="slider" id="set-scene-x-translation"
+                     onInput='on_range_change("set_scene_x_translation", this);'>
+              <output><div id="ctrl-output-scene-x-translation" class="ctrl-output">0</div></output>
+              <label for="set-scene-x-translation">Viewer x-position</label>
+            </div>
+            <div>
+              <input type="range" min="-10" max="10" value="0" class="slider" id="set-scene-y-translation"
+                     onInput='on_range_change("set_scene_y_translation", this);'>
+              <output><div id="ctrl-output-scene-y-translation" class="ctrl-output">0</div></output>
+              <label for="set-scene-y-translation">Viewer y-position</label>
+            </div>
+            <div>
+              <input type="range" min="10" max="100" value="80" class="slider" id="set-scene-z-translation"
+                     onInput='on_range_change("set_scene_z_translation", this);'>
+              <output><div id="ctrl-output-scene-z-translation" class="ctrl-output">80</div></output>
+              <label for="set-scene-z-translation">Viewer z-position</label>
+            </div>
+            <div>
+              <hr class='mini-separator'/>
+              <button id="reset-scene-position" name="set-skin-1" onClick='on_reset_scene_translation();'>Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="inline">
+          <div id="canvas-space">
+            <!-- Panel title bar -->
+            <div id="canvas-title-bar">
+              <hr />
+              <hr />
+              <hr />
+              <div class="title-bar-cover"><div></div></div>
+              <center>
+                <div id="title-bar-text"><div><center>Bounce</center></div></div>
+              </center>
+              <div class="title-bar-cover-less"><div></div></div>
+            </div>
+            <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+          </div>
+        </div>
+      </div>
+  </body>
+  <script type='text/javascript'>
+    var statusElement = document.getElementById('status');
+    var progressElement = document.getElementById('progress');
+    var spinnerElement = document.getElementById('spinner');
+
+    var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function() {
+            var element = document.getElementById('output');
+            if (element) element.value = ''; // clear browser cache
+            return function(text) {
+                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                // These replacements are necessary if you render to raw HTML
+                //text = text.replace(/&/g, "&amp;");
+                //text = text.replace(/</g, "&lt;");
+                //text = text.replace(/>/g, "&gt;");
+                //text = text.replace('\n', '<br>', 'g');
+                console.log(text);
+                if (element) {
+                    element.value += text + "\n";
+                    element.scrollTop = element.scrollHeight; // focus on bottom
+                }
+            };
+        })(),
+        canvas: (function() {
+            var canvas = document.getElementById('canvas');
+
+            // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+            // application robust, you may want to override this behavior before shipping!
+            // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+            canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+
+            return canvas;
+        })(),
+        setStatus: function(text) {
+            if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+            if (text === Module.setStatus.last.text) return;
+            var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+            var now = Date.now();
+            if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
+            Module.setStatus.last.time = now;
+            Module.setStatus.last.text = text;
+            if (m) {
+                text = m[1];
+                progressElement.value = parseInt(m[2])*100;
+                progressElement.max = parseInt(m[4])*100;
+                progressElement.hidden = false;
+                spinnerElement.hidden = false;
+            } else {
+                progressElement.value = null;
+                progressElement.max = null;
+                progressElement.hidden = true;
+                if (!text) spinnerElement.hidden = true;
+            }
+            statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+            this.totalDependencies = Math.max(this.totalDependencies, left);
+            Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+    };
+    Module.setStatus('Downloading...');
+    window.onerror = function() {
+        Module.setStatus('Exception thrown, see JavaScript console');
+        spinnerElement.style.display = 'none';
+        Module.setStatus = function(text) {
+            if (text) console.error('[post-exception status] ' + text);
+        };
+    };
+  </script>
+  <script type='text/javascript'>
+    /*! WASM call
+     */
+    function on_skin_click(num) { Module.ccall('set_box_skin', null, ['number'], [num]); }
+
+    /*! WASM call
+     */
+    function on_range_change(func, elem) {
+        (elem.nextElementSibling).firstChild.innerHTML = elem.value;
+        Module.ccall(func, null, ['number'], [elem.value]);
+    }
+
+    /*! WASM call
+     */
+    function on_color_change(func, elem) {
+        elem.nextElementSibling.firstChild.innerHTML = elem.value;
+        Module.ccall(func, null, ['string'], [elem.value]);
+    }
+
+    /*! WASM call
+     */
+    function on_checkbox_change(func, elem) { Module.ccall(func, null, ['bool'], [elem.checked]); }
+
+    /*! WASM call
+     */
+    function on_reset_speed() {
+        document.getElementById("set-x-speed").value = 0;
+        document.getElementById("set-y-speed").value = 0;
+
+        document.getElementById("ctrl-output-x-speed").innerHTML = "0";
+        document.getElementById("ctrl-output-y-speed").innerHTML = "0";
+
+        Module.ccall('reset_speed', null);
+    }
+
+    /*! WASM call
+     */
+    function on_reset_turn_rate() {
+        document.getElementById("set-x-turn-rate").value = 0;
+        document.getElementById("set-y-turn-rate").value = 0;
+        document.getElementById("set-z-turn-rate").value = 0;
+
+        document.getElementById("ctrl-output-x-turn-rate").innerHTML = "0";
+        document.getElementById("ctrl-output-y-turn-rate").innerHTML = "0";
+        document.getElementById("ctrl-output-z-turn-rate").innerHTML = "0";
+
+        Module.ccall('reset_turn_rate', null);
+    }
+
+    /*! WASM call
+     */
+    function on_reset_scene_translation() {
+        document.getElementById("set-scene-x-translation").value = 0;
+        document.getElementById("set-scene-y-translation").value = 0;
+        document.getElementById("set-scene-z-translation").value = 80;
+
+        document.getElementById("ctrl-output-scene-x-translation").innerHTML = "0";
+        document.getElementById("ctrl-output-scene-y-translation").innerHTML = "0";
+        document.getElementById("ctrl-output-scene-z-translation").innerHTML = "80";
+
+        Module.ccall('reset_scene_translation', null);
+    }
+
+    /*! WASM call
+     */
+    function on_reset_scene_rotation() {
+        document.getElementById("set-scene-pitch").value = 0;
+        document.getElementById("set-scene-yaw").value = 0;
+        document.getElementById("set-scene-roll").value = 0;
+
+        document.getElementById("ctrl-output-scene-pitch").innerHTML = "0";
+        document.getElementById("ctrl-output-scene-yaw").innerHTML = "0";
+        document.getElementById("ctrl-output-scene-roll").innerHTML = "0";
+
+        Module.ccall('reset_scene_rotation', null);
+    }
+
+    function is_browser_maybe_unsupported() {
+
+        let chromeAgent = navigator.userAgent.indexOf("Chrome");
+        let linuxOS = navigator.userAgent.indexOf("Linux");
+
+        return linuxOS != -1 && chromeAgent == -1;
+    }
+
+    // Maybe inform user of out of date browser
+    if (is_browser_maybe_unsupported()) {
+        document.getElementById("maybe-unsupported-browser-blurb").innerHTML =
+            "<div id='maybe-unsupported-browser-banner'>" +
+            "Your browser may be unsupported. This page works best with recent versions of Chrome." +
+            "</div>" +
+            "<br />" +
+            "<br />";
+    }
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>
