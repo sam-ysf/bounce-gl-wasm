@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href='https://fonts.googleapis.com/css?family=Noto Sans' rel='stylesheet'>
   <title>bounceGL - WebAssembly Version</title>
   <style>
@@ -608,18 +609,14 @@
   }
 
   function is_browser_maybe_unsupported() {
-
-    let chromeAgent = navigator.userAgent.indexOf("Chrome");
-    let linuxOS = navigator.userAgent.indexOf("Linux");
-
-    return linuxOS != -1 && chromeAgent == -1;
+    var canvas = document.createElement('canvas');
+    return typeof WebAssembly !== 'object' || !canvas.getContext('webgl2');
   }
 
-  // Maybe inform user of out of date browser
   if (is_browser_maybe_unsupported()) {
     document.getElementById("maybe-unsupported-browser-blurb").innerHTML =
       "<div id='maybe-unsupported-browser-banner'>" +
-      "Your browser may be unsupported. This page works best with recent versions of Chrome." +
+      "This app requires WebAssembly and WebGL 2. Update your browser or enable hardware acceleration." +
       "</div>" +
       "<br />" +
       "<br />";
